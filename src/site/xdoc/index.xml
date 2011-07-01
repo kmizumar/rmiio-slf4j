@@ -1,0 +1,181 @@
+<?xml version="1.0"?>
+
+<document>
+  <properties>
+    <author email="jahlborn@users.sf.net">James Ahlborn</author>
+    <title>Utilities for streaming data over RMI</title>
+  </properties>
+  <body>
+    <section name="RMIIO"
+             id="RMIIO">
+      <p>
+        RMIIO is a library which makes it as simple as possible to stream
+        large amounts of data using the RMI framework (or any RPC framework
+        for that matter).  Who needs this?  Well, if you have ever needed to
+        send a file from an RMI client to an RMI server, you have faced this
+        problem.  And, if you did manage to implement a basic solution, it
+        probably threw an OutOfMemoryError the first time someone tried to
+        send a 2GB file.  Due to the design of RMI, this common and
+        deceptively simple problem is actually quite difficult to solve in an
+        efficient and robust manner.
+      </p>
+      <p>
+        The RMI framework makes it very easy to implement remote communication
+        between java programs.  It takes a very difficult problem (remote
+        communication) and presents a fairly easy to use solution.  However,
+        the RMI framework is designed around sending and receiving groups of
+        objects which are all immediately available in memory.  How do you
+        send a file from the client to the server without blowing out memory
+        on the client or the server?  The tools and APIs in the standard java
+        runtime do not have any ready solutions to this problem, yet many
+        people have encountered it.  Spend a few moments searching through
+        Sun's java forums and you will find many questions and very few useful
+        suggestions (seriously, try the search <a href="http://onesearch.sun.com/search/onesearch/index.jsp?qt=rmi+send+file&amp;subCat=&amp;site=dev&amp;dftab=&amp;chooseCat=javaall&amp;col=developer-forums">"rmi send file"</a> for some
+        fun reading).  Among the suggestions:
+      </p>
+      <ul>
+        <li>Send a File object</li>
+        <li>Send a URL</li>
+        <li>Send an InputStream</li>
+        <li>Send an byte[]</li>
+      </ul>
+      <p>
+        The last is the first suggestion actually approaching usefulness--it
+        solves the first problem but not the second (for more detailed
+        rebuttals read the <a href="apidocs/overview-summary.html#overview_description">overview javadocs</a>).
+      </p>
+      <p>
+        What you really want to do is stream data from the client to the
+        server (you have an InputStream, right?) using a framework which does
+        not really expose a streaming model.  The RMIIO library was written to
+        fill in that missing gap in the RMI framework.  It provides some very
+        powerful classes which enable a client to stream data to the server
+        using only a few extra lines of code.
+      </p>
+      <subsection name="RemoteStream Example"
+                  id="RemoteStream_Example">
+        <p>
+          How simple?  Well, how about some example code (note, examples omit
+          normal exception handling for the sake of brevity).  The obvious
+          example, of course, is a simple file upload service.  If the client
+          and server were running in the same JVM, you would probably create a
+          server implementation like this:
+        </p>
+        <source>
+// A simple local file upload service
+public class LocalFileUploadService {
+  public void uploadFile(String fileName, InputStream fileData) {
+    // ... copy fileData to local storage ...
+  }
+}
+</source>
+        <p>
+          Easy, right?  Now, to actually turn this into a remote interface,
+          the <code>fileData</code> type needs to be changed, as an
+          InputStream will not work remotely.  Using RMIIO, this
+          implementation becomes:
+        </p>
+        <source>
+// A simple remote file upload service
+public class RemoteFileUploadService {
+  public void uploadFile(String fileName, RemoteInputStream remoteFileData) {
+    InputStream fileData = RemoteInputStreamClient.wrap(remoteFileData);
+    // ... copy fileData to local storage ...
+  }
+}
+</source>
+        <p>
+          That's it, one extra line on the server to wrap the RMIIO
+          RemoteInputStream as an InputStream (yes, it is confusing that the
+          server uses a method with "client" in the name, but in this
+          situation, the server is acting as the client with respect to the
+          RemoteInputStream).  Fine, so the server changes are easy, how does
+          the client create a RemoteInputStream?
+        </p>
+        <source>
+// a client call to a RemoteFileUploadService
+RemoteFileUploadService service = ...;
+InputStream fileData = ...;
+RemoteInputStreamServer remoteFileData = new SimpleRemoteInputStream(fileData);
+service.uploadFile("MyFile", remoteFileData.export());
+</source>
+        <p>
+          And there you have a working client which can stream a file to a
+          remote server (again, note that the standard try/catch/finally
+          blocks necessary in actual production code have been omitted from
+          these examples).  By wrapping the InputStream using one of the RMIIO
+          RemoteInputStreamServer implementations and exporting it, the
+          source file data can be streamed to the server using an already
+          established RMI connection.
+        </p>
+      </subsection>
+      <subsection>
+        <p>
+          This example just touches on the powerful functionality provided by
+          the RMIIO library.  See the <a href="#Features">Features</a> section
+          below for more details.  The RMIIO library is licensed under the
+          <a href="license.html">GNU Lesser General Public License</a>
+          and is part of the <a href="http://openhms.sourceforge.net/">OpenHMS</a> project.
+        </p>
+      </subsection>
+    </section>
+    <section name="Getting Started"
+             id="Getting_Started">
+      <ul>
+        <li>Introduction to the major classes in the <a href="class_reference.html">Class Reference</a></li>
+        <li>Extended code examples in the <a href="apidocs/overview-summary.html#overview_description">rmiio overview javadocs</a></li>
+        <li>Working stream and iterator examples (see the
+        <code>examples.stream</code> and <code>examples.iterator</code>
+        packages in the <a href="xref-test/index.html">test source cross references</a>)</li>
+        <li><a href="apidocs/overview-summary.html#Usage_Notes">Usage Notes</a></li>
+        <li><a href="faq.html">FAQ</a></li>
+        <li><a href="apidocs/index.html">Javadoc API documentation</a></li>
+        <li><a href="xref/index.html">Complete source code (with cross references)</a></li>
+      </ul>
+    </section>
+    <section name="Features"
+             id="Features">
+      <ul>
+        <li>Remote <a href="apidocs/com/healthmarketscience/rmiio/RemoteInputStreamServer.html">input</a> and <a href="apidocs/com/healthmarketscience/rmiio/RemoteOutputStreamServer.html">output</a> streams</li>
+        <li>Remote Iterator implementation for streaming collections of
+        objects (<a href="apidocs/com/healthmarketscience/rmiio/SerialRemoteIteratorServer.html">SerialRemoteIteratorServer</a>)</li>
+        <li>Optional GZIP compression over the wire (<a href="apidocs/com/healthmarketscience/rmiio/GZIPRemoteInputStream.html">input</a> and <a href="apidocs/com/healthmarketscience/rmiio/GZIPRemoteOutputStream.html">output</a> streams)</li>
+        <li>Stream progress monitoring hooks
+        (<a href="apidocs/com/healthmarketscience/rmiio/RemoteStreamMonitor.html">RemoteStreamMonitor</a>)</li>
+        <li>Optional low-latency streaming (<a href="apidocs/com/healthmarketscience/rmiio/SerialRemoteIteratorServer.html#SerialRemoteIteratorServer(boolean,%20boolean,%20com.healthmarketscience.rmiio.IOIterator)">noDelay</a>)</li>
+        <li>Serializable <a href="apidocs/com/healthmarketscience/rmiio/SerializableInputStream.html">InputStream</a> and <a href="apidocs/com/healthmarketscience/rmiio/SerializableOutputStream.html">OutputStream</a> wrappers for remote
+        input and output streams</li>
+        <li>Pluggable RPC integration which can be used to integrate with
+        frameworks other than RMI (see the <a href="#RemoteStreamExporter">RemoteStreamExporter</a> section below for details)</li>
+        <li>Utilities to facilitate robust RMI usage (<a href="apidocs/com/healthmarketscience/rmiio/RemoteRetry.html">RemoteRetry</a>)</li>
+      </ul>
+    </section>
+    <section name="RemoteStreamExporter"
+             id="RemoteStreamExporter">
+      <p>
+        As of RMIIO release 1.1.0, the streaming implementation classes have
+        been abstracted from the RPC framework infrastructure.  The <a href="apidocs/com/healthmarketscience/rmiio/exporter/package-summary.html#package_description">exporter package</a> has been added to enable the remote
+
+        stream implementations to be utilized within any RPC framework.  The
+        RemoteStreamExporter class can be implemented to tie the remote
+        stream implementations to whatever RPC mechanism is desired, the
+        default being RMI.  There is some proof-of-concept code in the
+        <code>src/corbaExample</code> directory showing CORBA being used as
+        the RPC framework, including a C++ client written using <a href="http://omniorb.sourceforge.net/">omniORB</a> which consumes a
+
+        remote stream from a java server.  Another feasible example would be
+        integrating RMIIO into the <a href="http://labs.jboss.com/jbossremoting/">JBoss Remoting</a> framework.
+      </p>
+    </section>
+    <section name="In The News"
+             id="InTheNews">
+      <p>
+        Some interesting articles about RMIIO:
+        <ul>
+          <li><a href="http://www.jroller.com/DhavalDalal/entry/rmi_and_streaming">RMI and Streaming?</a></li>
+          <li><a href="http://blog.krecan.net/2009/02/27/streaming-a-stream/">Streaming a stream</a></li>
+        </ul>
+      </p>
+    </section>
+  </body>
+</document>

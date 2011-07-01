@@ -1,0 +1,43 @@
+<document>
+  <properties>
+    <title>Release notes</title>
+    <author email="jahlborn@users.sf.net">James Ahlborn</author>
+  </properties>
+  <body>
+    <release version="2.0.2" date="2008-03-20">
+      <action dev="jahlborn" type="fix">
+        Allow reserialization of RemoteStreamServer.
+      </action>
+    </release>
+    <release version="2.0.1" date="2008-02-13">
+      <action dev="jahlborn" type="update">
+        Allow the default port for the DefaultRemoteStreamExporter to be
+        configured via a system property.
+      </action>
+      <action dev="jahlborn" type="update">
+        Make closing of local resources by a RemoteIteratorServer less prone
+        to surprises.
+      </action>
+      <action dev="jahlborn" type="update">
+        Change proxy utilities to use method code instead of string.
+      </action>
+      <action dev="jahlborn" type="update">
+        Move EncodingInputStream to util package.
+      </action>
+      <action dev="jahlborn" type="update">
+        Make RemoteStreamServer implementations Serializable by implementing
+        writeReplace to automagically export the object and return the remote
+        stub.
+      </action>
+      <action dev="jahlborn" type="add">
+        Add the DirectRemoteInputStream as a last-ditch alternative for
+        dealing with certain problematic scenarios.
+      </action>
+    </release>
+    <release version="2.0.0" date="2007-10-10">
+      <action dev="jahlborn" type="add">
+        Initial open source release.
+      </action>
+    </release>
+  </body>
+</document>

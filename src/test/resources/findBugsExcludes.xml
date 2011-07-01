@@ -1,0 +1,21 @@
+<?xml version="1.0"?>
+
+<FindBugsFilter>
+  <!-- These are not bugs. -->
+  <Match>
+    <Class name="~com.healthmarketscience.rmiio.Serializable(Input|Output)Stream" />
+    <Bug pattern="SE_BAD_FIELD" />
+  </Match>
+  <Match>
+    <Class name="~com.healthmarketscience.rmiio.Remote(Input|Output)?StreamServer" />
+    <Bug pattern="SE_TRANSIENT_FIELD_NOT_RESTORED" />
+  </Match>
+  <Match>
+    <Class name="~com.healthmarketscience.rmiio.GZIPRemote(Input|Output)Stream" />
+    <Bug pattern="SE_TRANSIENT_FIELD_NOT_RESTORED" />
+  </Match>
+  <Match>
+    <Class name="~com.healthmarketscience.rmiio.SimpleRemote(Input|Output)Stream" />
+    <Bug pattern="SE_TRANSIENT_FIELD_NOT_RESTORED" />
+  </Match>
+</FindBugsFilter>

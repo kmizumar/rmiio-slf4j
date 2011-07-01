@@ -1,0 +1,193 @@
+<?xml version="1.0"?>
+
+<faqs title="Frequently Asked Questions">
+
+  <part id="general">
+    <title>General</title>
+
+    <faq id="tbw">
+      <question>Where can I find sample code?</question>
+      <answer>
+        <p>
+          For a variety of code examples see the snippets in the
+          <a href="apidocs/overview-summary.html#overview_description">rmiio overview javadocs</a>
+          as well as the working examples in the
+          <a href="xref-test/index.html">test directory</a>.
+        </p>
+      </answer>
+    </faq>
+
+
+    <faq id="gzip">
+      <question>Why am I getting an IOException with the message "Corrupt GZIP
+                trailer"?</question>
+      <answer>
+        <p>This is most likely due to a bug in the JDK.  Files greater than
+           2GB in size spuriously cause this exception to be generated.  See
+           Sun bug <a href="http://bugs.sun.com/bugdatabase/view_bug.do?bug_id=5092263">5092263</a>.
+           This was finally fixed in JDK 1.5.0_08, 1.4.2_12, and should be
+           fixed in JDK 1.6</p>
+      </answer>
+    </faq>
+
+    <faq id="jdk">
+      <question>What version of the JDK does this require?</question>
+      <answer>
+        <p>
+          Requires JDK 1.5 or higher.  However, the only new feature used is
+          generics, so a simple filter on the source code (removing all
+          generics constructs) should make the source JDK 1.4 compatible (most
+          likely, although I have not personally tested this, so YMMV).  One
+          option here may be the
+          <a href="http://labs.jboss.com/jbossretro/">JBoss Retro project</a>.
+        </p>
+      </answer>
+    </faq>
+
+    <faq id="noobject">
+      <question>Why am I getting a NoSuchObjectException (or similar RMI exception)?</question>
+      <answer>
+        <p>
+          This most likely means that the RemoteStream client is trying to use
+          a reference to a RemoteStreamServer which has not been serialized
+          (in other words, the client is trying to use a local handle to the
+          server).  RMI uses a distributed garbage-collection (DGC) strategy
+          to keep server references alive while clients have RemoteStub
+          instances that reference them.  If the RemoteStub is not been
+          serialized/deserialized before usage, it does not trigger the DGC
+          code, so the server instance gets cleaned up soon after creation.
+          Basically, you should never use a RemoteStreamServer reference
+          locally (you should just use a regular Input/OutputStream in this
+          case).  For more information, see the EJB section of the
+          <a href="apidocs/overview-summary.html#Usage_Notes">Usage Notes</a>.
+        </p>
+      </answer>
+    </faq>
+
+    <faq id="notserial">
+      <question>Why am I getting a NotSerializableException when trying to send a remote stream?</question>
+      <answer>
+        <p>
+          This happens when you try to send the RemoteStreamServer instance as
+          the serializable value instead of the RemoteStub object returned
+          from the <a href="apidocs/com/healthmarketscience/rmiio/RemoteStreamServer.html#export()">RemoteStreamServer.export()</a>
+          method call.  You <em>must</em> export your RemoteStreamServer in
+          order to use it remotely.
+        </p>
+      </answer>
+    </faq>
+
+    <faq id="firewall">
+      <question>How can I fix firewall issues?</question>
+      <answer>
+        <p>
+          This is a big question.  First, make sure you have dealt with the <a href="http://java.sun.com/j2se/1.5.0/docs/guide/rmi/faq.html#firewall">basic
+          firewall related issues for RMI</a>.
+        </p>
+        <p>
+          Next, assuming you have normal RMI working from client to server,
+          you may need to reverse the RMIIO client/server roles (as they may
+          be the reverse of the conceptual client/server roles).  This
+          happens, for example, when you send a RemoteInputStream from the
+          client to the server (because the client acts as the server for the
+          RMIIO stream).  You may be able to fix any firewall related problems
+          by using a RemoteOutputStream returned from the server instead of a
+          RemoteInputStream passed from the client (so the client pushes data
+          to the server instead of the server pulling it from the client).  A
+          similar solution can be applied to a RemoteOutputStream (see the
+          <a href="class_reference.html#RemoteInputStream_Sequence_Diagrams">sequence diagrams</a> for more details).
+        </p>
+        <p>
+          Additionally, you may need to control the port that the RMIIO server
+          objects are exported on.  This can be done setting the
+          <code>com.healthmarketscience.rmiio.exporter.port</code> system
+          property to the desired port, assuming you are using the <a href="apidocs/com/healthmarketscience/rmiio/exporter/DefaultRemoteStreamExporter.html">default RemoteStreamExporter</a>.
+        </p>
+        <p>
+          If all else fails, and you are only attempting to use a
+          RemoteInputStream, then the <a href="apidocs/com/healthmarketscience/rmiio/DirectRemoteInputStream.html">DirectRemoteInputStream</a> may be the
+          answer to your problems (as of 2.0.1 release).  This class is an
+          RMI-only RemoteInputStream implementation which actually embeds the
+          stream data directly into the ObjectOutputStream. It is not
+          recommended for normal use, but can be a last ditch tool if nothing
+          else seems to work. Please read the javadocs <i>carefully</i> in
+          order to understand the pros and cons of the implementation before
+          using the class.
+        </p>
+        <p>
+          Note, this answer is still a work in progress.
+        </p>
+      </answer>
+    </faq>
+
+    <faq id="appserver">
+      <question>With which Application Servers/Frameworks has this been used?</question>
+      <answer>
+        <p>
+          <dl>
+            <dt><b>JBoss (4.0.x):</b></dt>
+            <dd>Used extensively as-is on JBoss.</dd>
+            <dt><b>WebLogic:</b></dt>
+            <dd>Needs a <a href="http://sourceforge.net/forum/message.php?msg_id=4712250">custom RemoteStreamExporter</a> in order to work with WebLogic's custom
+            RMI implementation.</dd>
+            <dt><b>Glassfish:</b></dt>
+            <dd>Glassfish uses RMI-IIOP (Corba) for the transport layer, thus a
+            a <a href="http://forums.sun.com/thread.jspa?messageID=10660702#10660702">custom RemoteStreamExporter</a> using
+            PortableRemoteObject is necessary.  This should work for any
+            Application Server using RMI-IIOP.  And, since glassfish supports
+            dynamic stub generation, no additional work is necessary.  For
+            situations where stubs need to be statically generated, the
+            <a href="http://java.sun.com/j2se/1.5.0/docs/guide/rmi-iiop/rmi_iiop_pg.html">RMI-IIOP Programmer's Guide</a> is a good place to start.</dd>
+            <dt><b>Spring (2.5)</b></dt>
+            <dd>Works as-is with the RMI invoker.  To use with the
+            HttpInvoker, you need to setup a singleton service which manages
+            all the RMIIO servers.  See <a href="https://sourceforge.net/projects/openhms/forums/forum/743949/topic/3452358">this forum thread</a> for details.</dd>
+          </dl>
+        </p>
+      </answer>
+    </faq>
+    
+    <faq id="dependencies">
+      <question>Why do I get a NoClassDefFoundError?</question>
+      <answer>
+        <p>
+          Probably because you're missing a jar that RMIIO depends on from
+          your classpath.  Take a look at the <a href="dependencies.html">dependencies list</a>.  The "compile" and
+          "runtime" dependencies are necessary for using RMIIO in your
+          application.  One great place to track down these dependencies is in
+          the <a href="http://repo1.maven.org/maven2/">Ibiblio Maven
+          Repository</a>.
+        </p>
+      </answer>
+    </faq>
+
+    <faq id="usage">
+      <question>Where can I find more information?</question>
+      <answer>
+        <p>
+          More FAQ-like answers can be found in the
+          <a href="apidocs/overview-summary.html#Usage_Notes">Usage Notes</a>.
+        </p>
+      </answer>
+    </faq>
+
+    <faq id="hms">
+      <question>Who is Health Market Science?</question>
+      <answer>
+        <p>
+          HMS is a small company located in suburban Philadelphia.
+          Using proprietary matching and consolidation software,
+          HMS scientifically manufactures the most comprehensive
+          and accurate healthcare data sets in the market today.
+          <a href="http://www.healthmarketscience.com/abouthms/careers.php">We're hiring!</a>
+          HMS is always looking for talented individuals, especially Java
+          developers.
+        </p>
+      </answer>
+    </faq>
+
+    
+
+  </part>
+
+</faqs>
