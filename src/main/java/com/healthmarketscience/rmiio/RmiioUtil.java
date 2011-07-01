@@ -31,8 +31,8 @@ import java.io.Closeable;
 import java.io.IOException;
 import java.util.Iterator;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Utility methods for working with rmiio classes.
@@ -41,8 +41,8 @@ import org.apache.commons.logging.LogFactory;
  */
 public class RmiioUtil
 {
-  private static final Log LOG = LogFactory.getLog(RmiioUtil.class);
-  
+  private static final Logger LOG = LoggerFactory.getLogger(RmiioUtil.class);
+
   private RmiioUtil() {
   }
 
@@ -77,7 +77,7 @@ public class RmiioUtil
       }
     }
   }
-  
+
   /**
    * Adapts an Iterator to the CloseableIOIterator interface.
    */
@@ -105,7 +105,7 @@ public class RmiioUtil
         closeQuietly((Closeable)_iter);
       }
     }
-    
+
   }
-  
+
 }

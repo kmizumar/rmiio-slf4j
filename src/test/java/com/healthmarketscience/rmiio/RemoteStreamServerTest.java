@@ -50,8 +50,8 @@ import java.util.LinkedList;
 import java.util.List;
 
 import com.healthmarketscience.rmiio.util.PipeBuffer;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import java.lang.reflect.Field;
 
 
@@ -59,17 +59,17 @@ import java.lang.reflect.Field;
  * Note, setting the system property {@code rmiio.fastTest} to {@code false}
  * when running the maven test suite will run more exhaustive tests (although
  * they take a while).
- * 
+ *
  * @author James Ahlborn
  */
 public class RemoteStreamServerTest extends BaseRemoteStreamTest {
 
-  private static final Log LOG = LogFactory.getLog(RemoteStreamServerTest.class);
+  private static final Logger LOG = LoggerFactory.getLogger(RemoteStreamServerTest.class);
 
   static final String TEST_FILE = "./src/test/data/file_transfer.data";
   static final int FILE_SIZE = 277672;
   private static final int PARTIAL_SIZE = 3000;
-  
+
   private static boolean _deleteOnExit = true;
 
   public void testTransfer() throws Exception
@@ -106,7 +106,7 @@ public class RemoteStreamServerTest extends BaseRemoteStreamTest {
                                     _clientExceptions, _monitors);
 
     checkClientExceptions(0);
-    
+
     checkFiles(emptyFile, tempFiles);
 
     checkMonitors(20, true);
@@ -127,7 +127,7 @@ public class RemoteStreamServerTest extends BaseRemoteStreamTest {
 
     checkMonitors(8, false);
   }
-  
+
   public void testDoubleClose() throws Exception
   {
     DummyIOStream iostream = new DummyIOStream();
@@ -140,7 +140,7 @@ public class RemoteStreamServerTest extends BaseRemoteStreamTest {
     istream.close();
     assertEquals(1, iostream._numCloses);
 
-    
+
     iostream = new DummyIOStream();
 
     OutputStream ostream = RemoteOutputStreamClient.wrap(iostream);
@@ -165,7 +165,7 @@ public class RemoteStreamServerTest extends BaseRemoteStreamTest {
                                     _monitors);
 
     checkClientExceptions(0);
-    
+
     checkFiles(testFile, tempFiles);
 
     if(isFastTest()) {
@@ -205,7 +205,7 @@ public class RemoteStreamServerTest extends BaseRemoteStreamTest {
 
     Object istreamRemIn = inField.get(istreamRem);
     assertFalse(istreamRemIn instanceof GZIPRemoteInputStream);
-     
+
     istreamRem = simulateRemote(istream);
 
     Object istreamRemInAlt = inField.get(istreamRem);
@@ -219,7 +219,7 @@ public class RemoteStreamServerTest extends BaseRemoteStreamTest {
     assertFalse(istreamRemInAlt instanceof GZIPRemoteInputStream);
     assertNotSame(istreamRemIn, istreamRemInAlt);
     assertEquals(istreamRemIn, istreamRemInAlt);
-    
+
     istream.close();
   }
 
@@ -236,7 +236,7 @@ public class RemoteStreamServerTest extends BaseRemoteStreamTest {
       assertTrue(compare(srcFile, tempFile, true) == 0);
     }
   }
-  
+
   private static File getTempFile(String prefix, List<List<File>> tempFiles,
                                   boolean doPartial,
                                   boolean doAbort,
@@ -283,7 +283,7 @@ public class RemoteStreamServerTest extends BaseRemoteStreamTest {
       // file2 is a partial file and all existing bytes match, we're all good
       return 0;
     }
-      
+
     return((b1 < b2) ? -1 :
            ((b1 > b2) ? 1 : 0));
   }
@@ -309,7 +309,7 @@ public class RemoteStreamServerTest extends BaseRemoteStreamTest {
       if(useCompression) {
         istream =
           simulateRemote(
-              (server = 
+              (server =
                (new GZIPRemoteInputStream(
                  new BufferedInputStream(new FileInputStream(fileName)),
                  monitor)))
@@ -318,7 +318,7 @@ public class RemoteStreamServerTest extends BaseRemoteStreamTest {
         // test writeReplace by *not* exporting explicitly here
         istream =
           simulateRemote((RemoteInputStream)
-              (server = 
+              (server =
                (new SimpleRemoteInputStream(
                  new BufferedInputStream(new FileInputStream(fileName)),
                  monitor))));
@@ -327,7 +327,7 @@ public class RemoteStreamServerTest extends BaseRemoteStreamTest {
       if(useCompression) {
         istream =
           simulateRemote(
-              (server = 
+              (server =
                (new UnreliableRemoteInputStreamServer(
                  (new GZIPRemoteInputStream(
                    new BufferedInputStream(new FileInputStream(fileName)),
@@ -336,7 +336,7 @@ public class RemoteStreamServerTest extends BaseRemoteStreamTest {
       } else {
         istream =
           simulateRemote(
-              (server = 
+              (server =
                (new UnreliableRemoteInputStreamServer(
                  (new SimpleRemoteInputStream(
                    new BufferedInputStream(new FileInputStream(fileName)),
@@ -348,7 +348,7 @@ public class RemoteStreamServerTest extends BaseRemoteStreamTest {
     if(localServers != null) {
       localServers.add(server);
     }
-    
+
     return istream;
   }
 
@@ -381,14 +381,14 @@ public class RemoteStreamServerTest extends BaseRemoteStreamTest {
         // test writeReplace by *not* exporting explicitly here
         ostream =
           simulateRemote((RemoteOutputStream)
-              (server = 
+              (server =
                (new GZIPRemoteOutputStream(
                  new BufferedOutputStream(new FileOutputStream(tempFile)),
                  monitor))));
       } else {
         ostream =
           simulateRemote(
-              (server = 
+              (server =
                (new SimpleRemoteOutputStream(
                  new BufferedOutputStream(new FileOutputStream(tempFile)),
                  monitor)))
@@ -398,7 +398,7 @@ public class RemoteStreamServerTest extends BaseRemoteStreamTest {
       if(useCompression) {
         ostream =
           simulateRemote(
-              (server = 
+              (server =
                (new UnreliableRemoteOutputStreamServer(
                  (new GZIPRemoteOutputStream(
                    new BufferedOutputStream(new FileOutputStream(tempFile)),
@@ -407,7 +407,7 @@ public class RemoteStreamServerTest extends BaseRemoteStreamTest {
       } else {
         ostream =
           simulateRemote(
-              (server = 
+              (server =
                (new UnreliableRemoteOutputStreamServer(
                  (new SimpleRemoteOutputStream(
                    new BufferedOutputStream(new FileOutputStream(tempFile)),
@@ -419,7 +419,7 @@ public class RemoteStreamServerTest extends BaseRemoteStreamTest {
     if(localServers != null) {
       localServers.add(server);
     }
-    
+
     return ostream;
   }
 
@@ -435,7 +435,7 @@ public class RemoteStreamServerTest extends BaseRemoteStreamTest {
     // create temp file
     File tempFile = getTempFile("client", tempFiles, doPartial, doAbort,
                                 doSkip);
-      
+
     OutputStream out =
       new BufferedOutputStream(new FileOutputStream(tempFile));
     try {
@@ -447,7 +447,7 @@ public class RemoteStreamServerTest extends BaseRemoteStreamTest {
         } catch(IOException ignored) {}
       }
     }
-      
+
     LOG.debug("Wrote file stream");
   }
 
@@ -469,7 +469,7 @@ public class RemoteStreamServerTest extends BaseRemoteStreamTest {
         }
       }
     }
-      
+
     LOG.debug("Sent file stream");
   }
 
@@ -486,7 +486,7 @@ public class RemoteStreamServerTest extends BaseRemoteStreamTest {
     if(doSkip) {
       skipAt = (FILE_SIZE % BUF_SIZE) - 1;
     }
-    
+
     int numRead = 0;
     int totRead = 0;
     int iteration = 0;
@@ -505,7 +505,7 @@ public class RemoteStreamServerTest extends BaseRemoteStreamTest {
           throw new IOException("skipped wrong?");
         }
       }
-        
+
       ++iteration;
     }
 
@@ -527,7 +527,7 @@ public class RemoteStreamServerTest extends BaseRemoteStreamTest {
     return !Boolean.FALSE.toString().equals(
       System.getProperty("rmiio.fastTest"));
   }
-  
+
 
   @SuppressWarnings("unchecked")
   public static List<List<File>> mainTest(
@@ -576,7 +576,7 @@ public class RemoteStreamServerTest extends BaseRemoteStreamTest {
 
     if(!doFastTests) {
       server.setUnreliable(true);
-    
+
       LOG.debug("Running 'unreliable' tests");
       clientThread = new Thread(new Runnable()
         {
@@ -589,12 +589,12 @@ public class RemoteStreamServerTest extends BaseRemoteStreamTest {
       clientThread.start();
       clientThread.join();
     }
-    
+
     LOG.debug("Unexporting server");
     UnicastRemoteObject.unexportObject(server, true);
 
-    
-    
+
+
     return tempFiles;
   }
 
@@ -646,7 +646,7 @@ public class RemoteStreamServerTest extends BaseRemoteStreamTest {
 
     return obj;
   }
-  
+
   public static void main(String[] args) throws Exception
   {
     int argc = 0;
@@ -680,7 +680,7 @@ public class RemoteStreamServerTest extends BaseRemoteStreamTest {
     }
   }
 
-    
+
   public interface RemoteFileServer extends Remote {
 
     public RemoteInputStream getInputFileStream(boolean useCompression,
@@ -712,18 +712,18 @@ public class RemoteStreamServerTest extends BaseRemoteStreamTest {
     public void useOutputStream(RemoteOutputStream ostream,
                                 boolean doPartial)
       throws IOException;
-    
+
   }
 
   public static class FileServer
     implements RemoteFileServer
   {
-  
+
     private String _name;
     private boolean _unreliable;
     private List<List<File>> _tempFiles;
     private List<AccumulateRemoteStreamMonitor<?>> _monitors;
-  
+
     public FileServer(String name, List<List<File>> tempFiles,
                       List<AccumulateRemoteStreamMonitor<?>> monitors) {
       _name = name;
@@ -734,7 +734,7 @@ public class RemoteStreamServerTest extends BaseRemoteStreamTest {
     public void setUnreliable(boolean unreliable) {
       _unreliable = unreliable;
     }
-    
+
     public RemoteInputStream getInputFileStream(boolean useCompression,
                                                 boolean doAbort)
       throws IOException
@@ -785,7 +785,7 @@ public class RemoteStreamServerTest extends BaseRemoteStreamTest {
 
         consumeInputStream("client", in, _tempFiles, doPartial, doAbort,
                            false);
-        
+
       } finally {
         if(in != null) {
           try {
@@ -807,7 +807,7 @@ public class RemoteStreamServerTest extends BaseRemoteStreamTest {
         out = RemoteOutputStreamClient.wrap(ostream);
 
         generateOutputStream(_name, out, doPartial);
-        
+
       } finally {
         if(out != null) {
           try {
@@ -818,7 +818,7 @@ public class RemoteStreamServerTest extends BaseRemoteStreamTest {
         }
       }
     }
-    
+
     public static void main(String args[])
     {
       try {
@@ -844,9 +844,9 @@ public class RemoteStreamServerTest extends BaseRemoteStreamTest {
 
   public static class FileClient
   {
-    
+
     private FileClient() {
-    
+
     }
 
     private static void getFile(RemoteFileServer stub,
@@ -871,7 +871,7 @@ public class RemoteStreamServerTest extends BaseRemoteStreamTest {
 
         consumeInputStream("client", in, tempFiles, doPartial, doAbort,
                            doSkip);
-        
+
       } finally {
         if(in != null) {
           try {
@@ -881,7 +881,7 @@ public class RemoteStreamServerTest extends BaseRemoteStreamTest {
           }
         }
       }
-      
+
     }
 
     private static void getFileReverse(
@@ -907,7 +907,7 @@ public class RemoteStreamServerTest extends BaseRemoteStreamTest {
           server.close();
         }
       }
-      
+
       LOG.debug("Wrote file stream");
     }
 
@@ -943,7 +943,7 @@ public class RemoteStreamServerTest extends BaseRemoteStreamTest {
           }
         }
       }
-      
+
     }
 
 
@@ -970,10 +970,10 @@ public class RemoteStreamServerTest extends BaseRemoteStreamTest {
           server.close();
         }
       }
-      
+
       LOG.debug("Sent file stream");
     }
-    
+
 
     public static List<Throwable> main(
         RemoteFileServer stub,
@@ -987,7 +987,7 @@ public class RemoteStreamServerTest extends BaseRemoteStreamTest {
         List<AccumulateRemoteStreamMonitor<?>> monitors)
     {
       List<Throwable> exceptions = new ArrayList<Throwable>();
-      
+
       // try uncompressed get (possibly aborted/skipped)
       try {
         if(!reverse) {
@@ -1011,7 +1011,7 @@ public class RemoteStreamServerTest extends BaseRemoteStreamTest {
         } else {
           getFileReverse(stub, unreliable, true, tempFiles, false, doAbort,
                          false, monitors);
-        }          
+        }
       } catch(Throwable t) {
         exceptions.add(t);
       }
@@ -1040,7 +1040,7 @@ public class RemoteStreamServerTest extends BaseRemoteStreamTest {
         } catch(Throwable t) {
           exceptions.add(t);
         }
-        
+
         // try compressed get using serializable stream
         try {
           if(!reverse) {
@@ -1103,7 +1103,7 @@ public class RemoteStreamServerTest extends BaseRemoteStreamTest {
           } catch(Throwable t) {
             exceptions.add(t);
           }
-        
+
           // try compressed send using serializable stream
           try {
             if(!reverse) {
@@ -1117,10 +1117,10 @@ public class RemoteStreamServerTest extends BaseRemoteStreamTest {
           }
         }
       }
-      
+
       return exceptions;
     }
-    
+
     public static void main(String args[])
     {
       String sendFileName = args[0];
@@ -1132,14 +1132,14 @@ public class RemoteStreamServerTest extends BaseRemoteStreamTest {
 
         main(stub, sendFileName, null, false, false, false, false, false,
              null);
-      
+
       } catch (Exception e) {
         LOG.debug("Client exception: " + e.toString());
         e.printStackTrace();
       }
 
     }
-  
+
   }
 
   private static class UnreliableRemoteInputStreamServer
@@ -1151,7 +1151,7 @@ public class RemoteStreamServerTest extends BaseRemoteStreamTest {
     private int _lastExPre = 1;
     private int _lastExPost = 1;
     private RemoteInputStreamServer _in;
-    
+
     public UnreliableRemoteInputStreamServer(
       RemoteInputStreamServer in)
     {
@@ -1172,7 +1172,7 @@ public class RemoteStreamServerTest extends BaseRemoteStreamTest {
         }
       }
     }
-    
+
     public boolean usingGZIPCompression()
       throws IOException
     {
@@ -1183,7 +1183,7 @@ public class RemoteStreamServerTest extends BaseRemoteStreamTest {
         beUnreliable(false);
       }
     }
-    
+
     public int available()
       throws IOException
     {
@@ -1218,7 +1218,7 @@ public class RemoteStreamServerTest extends BaseRemoteStreamTest {
         beUnreliable(false);
       }
     }
-             
+
 
     public long skip(long n, int skipId)
       throws IOException
@@ -1240,7 +1240,7 @@ public class RemoteStreamServerTest extends BaseRemoteStreamTest {
     public Class<RemoteInputStream> getRemoteClass() {
       return RemoteInputStream.class;
     }
-    
+
     @Override
     protected Object getLock() { return _in.getLock(); }
 
@@ -1248,7 +1248,7 @@ public class RemoteStreamServerTest extends BaseRemoteStreamTest {
     protected void closeImpl(boolean writeSuccess)
       throws IOException
     { _in.closeImpl(writeSuccess); }
-    
+
   }
 
   private static class UnreliableRemoteOutputStreamServer
@@ -1260,14 +1260,14 @@ public class RemoteStreamServerTest extends BaseRemoteStreamTest {
     private int _lastExPre = 1;
     private int _lastExPost = 1;
     private RemoteOutputStreamServer _out;
-    
+
     public UnreliableRemoteOutputStreamServer(
       RemoteOutputStreamServer out)
     {
       super(RemoteOutputStreamServer.DUMMY_MONITOR);
       _out = out;
     }
-    
+
     private void beUnreliable(boolean pre)
       throws RemoteException
     {
@@ -1281,7 +1281,7 @@ public class RemoteStreamServerTest extends BaseRemoteStreamTest {
         }
       }
     }
-    
+
     public boolean usingGZIPCompression()
       throws IOException
     {
@@ -1292,7 +1292,7 @@ public class RemoteStreamServerTest extends BaseRemoteStreamTest {
         beUnreliable(false);
       }
     }
-    
+
     public void close(boolean writeSuccess)
       throws IOException
     {
@@ -1327,16 +1327,16 @@ public class RemoteStreamServerTest extends BaseRemoteStreamTest {
         beUnreliable(false);
       }
     }
-             
+
     @Override
     protected RemoteOutputStreamServer getAsSub()
     { return _out.getAsSub(); }
-    
+
     @Override
     public Class<RemoteOutputStream> getRemoteClass() {
       return RemoteOutputStream.class;
     }
-    
+
     @Override
     protected Object getLock() { return _out.getLock(); }
 
@@ -1344,7 +1344,7 @@ public class RemoteStreamServerTest extends BaseRemoteStreamTest {
     protected void closeImpl(boolean writeSuccess)
       throws IOException
     { _out.closeImpl(writeSuccess); }
-    
+
   }
 
   private static class DummyIOStream
@@ -1357,7 +1357,7 @@ public class RemoteStreamServerTest extends BaseRemoteStreamTest {
     {
       return false;
     }
-  
+
     public void close(boolean transferSuccess)
       throws IOException, RemoteException
     {
@@ -1392,5 +1392,5 @@ public class RemoteStreamServerTest extends BaseRemoteStreamTest {
       return 0;
     }
   }
-  
+
 }

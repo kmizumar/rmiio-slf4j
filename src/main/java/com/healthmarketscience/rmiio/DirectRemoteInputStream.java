@@ -42,9 +42,8 @@ import java.io.OutputStream;
 import java.io.Serializable;
 import java.rmi.RemoteException;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
-
+import org.slf4j.LoggerFactory;
+import org.slf4j.Logger;
 
 /**
  * RemoteInputStream implementation which mimics the RemoteInputStream
@@ -95,15 +94,15 @@ import org.apache.commons.logging.LogFactory;
  * impact the server</i>.  If the need arises in the future, client code which
  * uses this class may switch over to using one of the more robust
  * RemoteInputStream implementations without any changes to the server.
- * 
+ *
  * @author James Ahlborn
  */
 public class DirectRemoteInputStream
   implements RemoteInputStream, Closeable, Serializable
 {
-  private static final Log LOG = LogFactory.getLog(DirectRemoteInputStream.class);  
+  private static final Logger LOG = LoggerFactory.getLogger(DirectRemoteInputStream.class);
 
-  private static final long serialVersionUID = 20080125L;  
+  private static final long serialVersionUID = 20080125L;
 
   /** status of the consumption of the underlying stream */
   private enum ConsumptionState {
@@ -114,7 +113,7 @@ public class DirectRemoteInputStream
     /** the underlying stream is being consumed by serialization */
     SERIAL;
   }
-  
+
   /** chunk code which indicates that the next chunk of data is the default
       length */
   private static final int DEFAULT_CHUNK_CODE = 0;
@@ -147,11 +146,11 @@ public class DirectRemoteInputStream
   public DirectRemoteInputStream(InputStream in) {
     this(in, true, RemoteInputStreamServer.DUMMY_MONITOR);
   }
-  
+
   public DirectRemoteInputStream(InputStream in, boolean compress) {
     this(in, compress, RemoteInputStreamServer.DUMMY_MONITOR);
   }
-  
+
   public DirectRemoteInputStream(
       InputStream in, boolean compress,
       RemoteStreamMonitor<RemoteInputStreamServer> monitor)
@@ -174,7 +173,7 @@ public class DirectRemoteInputStream
     }
     _consumptionState = ConsumptionState.LOCAL;
   }
-  
+
   public boolean usingGZIPCompression()
     throws IOException, RemoteException
   {
@@ -193,34 +192,34 @@ public class DirectRemoteInputStream
   {
     close();
   }
-  
+
   public byte[] readPacket(int packetId)
     throws IOException, RemoteException
   {
     // note, this code should always be used locally, so the incoming packetId
     // can be safely ignored
-    
+
     if(_gotEOF) {
       return null;
     }
-    
+
     markLocalConsumption();
     byte[] packet = PacketInputStream.readPacket(
         _in, new byte[RemoteInputStreamServer.DEFAULT_CHUNK_SIZE]);
     _gotEOF = (packet == null);
     return packet;
   }
-  
+
   public long skip(long n, int skipId)
     throws IOException, RemoteException
   {
     // note, this code should always be used locally, so the incoming skipId
     // can be safely ignored
-    
+
     markLocalConsumption();
     return _in.skip(n);
   }
-  
+
   public void close()
     throws IOException
   {
@@ -330,7 +329,7 @@ public class DirectRemoteInputStream
           LOG.debug("Failed closing server", e);
         }
       }
-      
+
     } finally {
       RmiioUtil.closeQuietly(server);
       RmiioUtil.closeQuietly(this);
@@ -351,7 +350,7 @@ public class DirectRemoteInputStream
     // read the default chunk size from the incoming file
     final int defaultChunkSize = in.readInt();
     checkChunkSize(defaultChunkSize);
-    
+
     // setup a temp file for the incoming data (make sure it gets cleaned up
     // somehow)
     _tmpFile = File.createTempFile("stream_", ".dat");
@@ -371,7 +370,7 @@ public class DirectRemoteInputStream
           // all done
           break;
         }
-        
+
         int readLen = defaultChunkSize;
         if(chunkCode != DEFAULT_CHUNK_CODE) {
           readLen = in.readInt();
@@ -393,24 +392,24 @@ public class DirectRemoteInputStream
       // the underlying stream is now in it's initial state
       _consumptionState = ConsumptionState.NONE;
       _gotEOF = false;
-      
+
     } finally {
       RmiioUtil.closeQuietly(out);
     }
-    
+
   }
 
   /**
    * Throws an InvalidObjectException if the given chunkSize is invalid.
    */
-  private static void checkChunkSize(int chunkSize) 
+  private static void checkChunkSize(int chunkSize)
     throws IOException
   {
     if(chunkSize <= 0) {
       throw new InvalidObjectException("invalid chunk size " + chunkSize);
     }
   }
-  
+
   /**
    * Copies the given number of bytes from the given InputStream to the given
    * OutputStream using the given buffer for transfer.  The given InputStream
@@ -430,6 +429,6 @@ public class DirectRemoteInputStream
       length -= readLen;
     }
   }
-  
-  
+
+
 }

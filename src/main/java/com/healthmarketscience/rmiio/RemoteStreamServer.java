@@ -42,8 +42,8 @@ import java.util.Set;
 import java.util.concurrent.atomic.AtomicReference;
 
 import com.healthmarketscience.rmiio.exporter.RemoteStreamExporter;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 
 
@@ -56,9 +56,9 @@ import org.apache.commons.logging.LogFactory;
 public abstract class RemoteStreamServer<StreamServerType, StreamType>
   implements Remote, Unreferenced, Closeable, Serializable
 {
-  protected static final Log LOG = LogFactory.getLog(RemoteStreamServer.class);
+  protected static final Logger LOG = LoggerFactory.getLogger(RemoteStreamServer.class);
 
-  private static final long serialVersionUID = 20080212L;  
+  private static final long serialVersionUID = 20080212L;
 
   /** the initial sequence id for server methods which have not yet been
       invoked */
@@ -66,7 +66,7 @@ public abstract class RemoteStreamServer<StreamServerType, StreamType>
   /** the initial sequence id for client code which has not yet invoked any
       remote methods */
   protected static final int INITIAL_VALID_SEQUENCE_ID = 0;
-  
+
   /** this set will temporarily maintain a hard reference to a newly created
       RemoteStreamServer (via a HardRefMonitor) so that the stream remote stub
       isn't prematurely garbage collected.  see HardRefMonitor for more
@@ -77,7 +77,7 @@ public abstract class RemoteStreamServer<StreamServerType, StreamType>
   private enum State {
     OPEN, ABORTED, CLOSED;
   }
-  
+
   /** whether or not this stream has been closed yet */
   private transient final AtomicReference<State> _state =
     new AtomicReference<State>(State.OPEN);
@@ -116,10 +116,10 @@ public abstract class RemoteStreamServer<StreamServerType, StreamType>
       throw new IllegalStateException("Re-exporting still exported stream " +
                                       this);
     }
-    
+
     // keep a reference to the exporter which exported us
     _exporter = exporter;
-    
+
     if(!(HardRefMonitor.class.isInstance(_monitor))) {
       // we temporarily wrap the monitor in order to keep our remote stub from
       // getting prematurely garbage collected.  see HardRefMonitor for more
@@ -185,7 +185,7 @@ public abstract class RemoteStreamServer<StreamServerType, StreamType>
   public final void close() {
     unreferenced();
   }
-  
+
   /**
    * Cleans up after this stream.  Unexports the Remote object, closes the
    * underlying stream, and makes the final call(s) to the stream monitor.
@@ -207,33 +207,33 @@ public abstract class RemoteStreamServer<StreamServerType, StreamType>
 
     boolean closeCompleted = false;
     try {
-    
+
       // do actual close work
       closeImpl(transferSuccess);
       closeCompleted = true;
-      
+
     } catch(IOException e) {
 
       // update the monitor
       _monitor.failure(getAsSub(), e);
       throw e;
-      
+
     } catch(RuntimeException e) {
 
       // update the monitor
       _monitor.failure(getAsSub(), e);
       throw e;
-      
+
     } finally {
 
       try {
-        
+
         // update the monitor
         _monitor.closed(getAsSub(), (remoteClose && closeCompleted &&
                                      (oldState == State.OPEN)));
-        
+
       } finally {
-        
+
         // finally, unexport ourselves
         unexport();
       }
@@ -277,13 +277,13 @@ public abstract class RemoteStreamServer<StreamServerType, StreamType>
    * server implementation in a remote method call will "do the right thing",
    * replacing the actual reference to this instance with a reference to an
    * automagically generated remote reference to this server instance).
-   * 
+   *
    * @return an exported remote stub for this instance
    * @throws NotSerializableException if the export attempt fails
    * @serialData the serialized data is the object returned by the
    *             {@link #export} method
    */
-  protected final Object writeReplace() 
+  protected final Object writeReplace()
     throws ObjectStreamException
   {
     // note, we only want to do implicit export once.  it's possible that a
@@ -311,8 +311,8 @@ public abstract class RemoteStreamServer<StreamServerType, StreamType>
   private void setRealMonitor(
       RemoteStreamMonitor<StreamServerType> realMonitor) {
     _monitor = realMonitor;
-  }  
-  
+  }
+
   /**
    * Closes (possibly flushes) the underlying streams and cleans up any
    * resources.  Called by the finish() method.
@@ -333,11 +333,11 @@ public abstract class RemoteStreamServer<StreamServerType, StreamType>
    * @return the class of the remote stream interface for this server
    */
   public abstract Class<StreamType> getRemoteClass();
-  
+
   /**
    * Returns a handle to this object as a subclass instance.
    */
-  protected abstract StreamServerType getAsSub();  
+  protected abstract StreamServerType getAsSub();
 
   /**
    * Utility class which temporarily maintains a hard reference to the
@@ -361,7 +361,7 @@ public abstract class RemoteStreamServer<StreamServerType, StreamType>
   {
     /** handle to the actual monitor for the outer RemoteStreamServer. */
     private final RemoteStreamMonitor<StreamServerType> _realMonitor;
-    
+
     public HardRefMonitor(RemoteStreamMonitor<StreamServerType> realMonitor) {
       _realMonitor = realMonitor;
       _hardRefSet.add(this);
@@ -376,7 +376,7 @@ public abstract class RemoteStreamServer<StreamServerType, StreamType>
       // RemoteStreamServer to the real one
       setRealMonitor(_realMonitor);
     }
-    
+
     public void failure(StreamServerType stream, Exception e) {
       cleanup();
       _realMonitor.failure(stream, e);
@@ -387,7 +387,7 @@ public abstract class RemoteStreamServer<StreamServerType, StreamType>
       cleanup();
       _realMonitor.bytesMoved(stream, numBytes, isReattempt);
     }
-    
+
     public void bytesSkipped(StreamServerType stream, long numBytes,
                              boolean isReattempt) {
       cleanup();
@@ -398,7 +398,7 @@ public abstract class RemoteStreamServer<StreamServerType, StreamType>
       cleanup();
       _realMonitor.localBytesMoved(stream, numBytes);
     }
-    
+
     public void localBytesSkipped(StreamServerType stream, long numBytes) {
       cleanup();
       _realMonitor.localBytesSkipped(stream, numBytes);
@@ -408,7 +408,7 @@ public abstract class RemoteStreamServer<StreamServerType, StreamType>
       cleanup();
       _realMonitor.closed(stream, clean);
     }
-    
+
   }
-  
+
 }

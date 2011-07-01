@@ -30,8 +30,8 @@ package com.healthmarketscience.rmiio.exporter;
 import java.rmi.RemoteException;
 
 import com.healthmarketscience.rmiio.RemoteStreamServer;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Base class for objects which manage exporting RemoteStreamServers.
@@ -55,7 +55,7 @@ import org.apache.commons.logging.LogFactory;
  */
 public abstract class RemoteStreamExporter
 {
-  protected static final Log LOG = LogFactory.getLog(RemoteStreamExporter.class);  
+  protected static final Logger LOG = LoggerFactory.getLogger(RemoteStreamExporter.class);
 
   /** system property used by {@link #getInstance} to determine which exporter
       implementation to return */
@@ -70,7 +70,7 @@ public abstract class RemoteStreamExporter
   /** RemoteStreamExporter instance returned by {@link #getInstance}, created
       once, on demand */
   private static RemoteStreamExporter _INSTANCE = null;
-  
+
   protected RemoteStreamExporter() {
   }
 
@@ -126,13 +126,13 @@ public abstract class RemoteStreamExporter
 
         // cast the stub to the correct type
         stub = server.getRemoteClass().cast(stubObj);
-        
+
         // let the stream do stuff if necessary
         server.exported(this);
 
         // all good!
         exportProcessed = true;
-        
+
       } finally {
         if(!exportProcessed) {
           // bailout!
@@ -143,7 +143,7 @@ public abstract class RemoteStreamExporter
       return stub;
     }
   }
-  
+
   /**
    * Unexports the given previously exported stream server from the desired
    * RPC framework.  The given stream instance will no longer be reachable
@@ -159,7 +159,7 @@ public abstract class RemoteStreamExporter
 
         // do the actual unexport
         unexportImpl(server);
-        
+
       } catch(Exception e) {
         if(LOG.isDebugEnabled()) {
           LOG.debug("Unexporting failed! for " + server, e);
@@ -180,7 +180,7 @@ public abstract class RemoteStreamExporter
    * frameworks which export remote streams should attempt to handle abnormal
    * client termination, and are encouraged to make use of the Unreferenced
    * interface to shutdown an orphaned stream server.
-   * 
+   *
    * @return the remote stub, which should be an instance of the remote
    *         interface of this server
    * @throws RemoteException if the stream instance could not be exported
@@ -199,5 +199,5 @@ public abstract class RemoteStreamExporter
    */
   protected abstract void unexportImpl(RemoteStreamServer<?,?> server)
     throws Exception;
-  
+
 }

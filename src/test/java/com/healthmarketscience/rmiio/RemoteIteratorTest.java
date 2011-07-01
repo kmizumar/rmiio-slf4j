@@ -35,8 +35,8 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import java.util.ArrayList;
 
 
@@ -45,7 +45,7 @@ import java.util.ArrayList;
  */
 public class RemoteIteratorTest extends BaseRemoteStreamTest {
 
-  private static final Log LOG = LogFactory.getLog(RemoteIteratorTest.class);
+  private static final Logger LOG = LoggerFactory.getLogger(RemoteIteratorTest.class);
 
 
   public void testTransfer() throws Exception
@@ -55,10 +55,10 @@ public class RemoteIteratorTest extends BaseRemoteStreamTest {
                                                    _monitors);
 
     checkClientExceptions(0);
-    
+
     // should have 3 lists
     assertEquals(3, testObjLists.size());
-    
+
     // compare all sent objects to originals
     for(List<TestObject> testObjList : testObjLists) {
       assertEquals(ObjectClient.SEND_OBJECTS, testObjList);
@@ -74,10 +74,10 @@ public class RemoteIteratorTest extends BaseRemoteStreamTest {
                                                    _monitors);
 
     checkClientExceptions(0);
-    
+
     // should have 3 lists
     assertEquals(3, testObjLists.size());
-    
+
     // should have empty result lists
     for(List<TestObject> testObjList : testObjLists) {
       assertTrue(testObjList.isEmpty());
@@ -93,7 +93,7 @@ public class RemoteIteratorTest extends BaseRemoteStreamTest {
                                                    _monitors);
 
     checkClientExceptions(3);
-    
+
     checkMonitors(3, false);
   }
 
@@ -109,9 +109,9 @@ public class RemoteIteratorTest extends BaseRemoteStreamTest {
 
     assertEquals(ObjectClient.SEND_OBJECTS.get(0),
                  testObjLists.get(0).get(0));
-    
+
     checkClientExceptions(1);
-    
+
     checkMonitors(1, false);
   }
 
@@ -138,7 +138,7 @@ public class RemoteIteratorTest extends BaseRemoteStreamTest {
     while(dstIter.hasNext()) {
       dstList.add(dstIter.next());
     }
-    
+
     assertEquals(srcList, dstList);
   }
 
@@ -178,7 +178,7 @@ public class RemoteIteratorTest extends BaseRemoteStreamTest {
     return server._recvdObjectLists;
   }
 
-    
+
   public interface RemoteObjectServer extends Remote {
 
     public void sendObjects(RemoteIterator<TestObject> iterator,
@@ -193,7 +193,7 @@ public class RemoteIteratorTest extends BaseRemoteStreamTest {
 
     private List<List<TestObject>> _recvdObjectLists =
       new LinkedList<List<TestObject>>();
-  
+
     public ObjectServer() {
     }
 
@@ -291,10 +291,10 @@ public class RemoteIteratorTest extends BaseRemoteStreamTest {
           server.close();
         }
       }
-      
+
       LOG.debug("Sent objects");
     }
-  
+
 
     public static List<Throwable> main(
         RemoteObjectServer stub,
@@ -304,7 +304,7 @@ public class RemoteIteratorTest extends BaseRemoteStreamTest {
         List<AccumulateRemoteStreamMonitor<?>> monitors)
     {
       List<Throwable> exceptions = new ArrayList<Throwable>();
-      
+
       // try uncompressed, noDelay send
       try {
         sendObjects(stub, false, false, sendEmptyList, doAbort, true,
@@ -322,7 +322,7 @@ public class RemoteIteratorTest extends BaseRemoteStreamTest {
         } catch(Throwable t) {
           exceptions.add(t);
         }
-        
+
         // try compressed send
         try {
           sendObjects(stub, true, false, sendEmptyList, doAbort, false, false,
@@ -332,7 +332,7 @@ public class RemoteIteratorTest extends BaseRemoteStreamTest {
         }
 
         if(!doAbort) {
-          
+
           // try partial uncompressed send
           try {
             sendObjects(stub, false, true, sendEmptyList, false, false, false,
@@ -350,7 +350,7 @@ public class RemoteIteratorTest extends BaseRemoteStreamTest {
           }
         }
       }
-      
+
       return exceptions;
     }
 
@@ -365,7 +365,7 @@ public class RemoteIteratorTest extends BaseRemoteStreamTest {
     AccumulateRemoteIteratorMonitor() {
       super(false);
     }
-    
+
     public void setDoAbort(RemoteIteratorServer server,
                            boolean doAbort) {
       _server = server;
@@ -399,11 +399,11 @@ public class RemoteIteratorTest extends BaseRemoteStreamTest {
     }
 
   }
-  
+
   public static class TestObject implements Serializable
   {
     private static final long serialVersionUID = 1;
-    
+
     private String _strData;
     private int _intData;
 
@@ -420,5 +420,5 @@ public class RemoteIteratorTest extends BaseRemoteStreamTest {
     }
 
   }
-  
+
 }

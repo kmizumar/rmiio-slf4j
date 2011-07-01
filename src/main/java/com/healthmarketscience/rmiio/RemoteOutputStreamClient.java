@@ -30,8 +30,8 @@ package com.healthmarketscience.rmiio;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.util.zip.GZIPOutputStream;
-import org.apache.commons.logging.LogFactory;
-import org.apache.commons.logging.Log;
+import org.slf4j.LoggerFactory;
+import org.slf4j.Logger;
 
 import com.healthmarketscience.rmiio.util.SingleByteAdapter;
 import com.healthmarketscience.rmiio.util.PipeBuffer;
@@ -59,9 +59,9 @@ public class RemoteOutputStreamClient
   /** The default retry policy used by this class's wrappers if none is
       specified by the caller. */
   public static final RemoteRetry DEFAULT_RETRY = RemoteClient.DEFAULT_RETRY;
-  
-  protected static final Log LOG =
-    LogFactory.getLog(RemoteOutputStreamClient.class);
+
+  protected static final Logger LOG =
+    LoggerFactory.getLogger(RemoteOutputStreamClient.class);
 
   /** default chunk size for shuffling data over the wire. */
   public static final Integer DEFAULT_CHUNK_SIZE =
@@ -82,7 +82,7 @@ public class RemoteOutputStreamClient
   {
     return wrap(remoteOut, DEFAULT_RETRY, DEFAULT_CHUNK_SIZE);
   }
-  
+
   /**
    * Wraps a RemoteOutputStream as an OutputStream using the given retry
    * policy.
@@ -98,7 +98,7 @@ public class RemoteOutputStreamClient
   {
     return wrap(remoteOut, retry, DEFAULT_CHUNK_SIZE);
   }
-  
+
   /**
    * Wraps a RemoteOutputStream as an OutputStream using the given retry
    * policy.
@@ -133,7 +133,7 @@ public class RemoteOutputStreamClient
       retStream =
         new SaferGZIPOutputStream(retStream, chunkSize);
     }
-    
+
     return retStream;
   }
 
@@ -170,7 +170,7 @@ public class RemoteOutputStreamClient
       _chunkSize = chunkSize;
       _byteBuffer = new PipeBuffer(_chunkSize);
     }
-    
+
     @Override
     public void close()
       throws IOException
@@ -181,7 +181,7 @@ public class RemoteOutputStreamClient
         // server will be gone
         return;
       }
-      
+
       try {
         // only flush local data, let close() call flush remote
         flush(false);
@@ -193,7 +193,7 @@ public class RemoteOutputStreamClient
 
       // close the remote stream
       _remoteOut.close(_writeSuccess);
-      
+
       // only set this if the close call is successful (does not throw)
       _remoteCloseSuccessful = true;
     }
@@ -235,7 +235,7 @@ public class RemoteOutputStreamClient
         if(!success) {
           _writeSuccess = false;
         }
-      }        
+      }
     }
 
     @Override
@@ -244,7 +244,7 @@ public class RemoteOutputStreamClient
     {
       flush(true);
     }
-    
+
     @Override
     public synchronized void write(int b)
       throws IOException
@@ -276,7 +276,7 @@ public class RemoteOutputStreamClient
         }
       }
     }
-    
+
   }
 
   /**
@@ -315,5 +315,5 @@ public class RemoteOutputStreamClient
       }
     }
   }
-  
+
 }

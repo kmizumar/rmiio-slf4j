@@ -32,8 +32,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 import junit.framework.TestCase;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import java.io.InputStream;
 
 import java.io.OutputStream;
@@ -44,12 +44,12 @@ import java.io.OutputStream;
 public class BaseRemoteStreamTest extends TestCase
 {
 
-  private static final Log LOG = LogFactory.getLog(BaseRemoteStreamTest.class);
-  
+  private static final Logger LOG = LoggerFactory.getLogger(BaseRemoteStreamTest.class);
+
   protected List<Throwable> _clientExceptions = new ArrayList<Throwable>();
   protected List<AccumulateRemoteStreamMonitor<?>> _monitors =
     new ArrayList<AccumulateRemoteStreamMonitor<?>>();
-  
+
   protected void checkMonitors(int numExpectedMonitors,
                                boolean expectClean)
     throws Exception
@@ -67,11 +67,11 @@ public class BaseRemoteStreamTest extends TestCase
       for(Throwable t : _clientExceptions) {
         LOG.error("Client exceptions ", t);
       }
-    }    
+    }
     assertEquals(numExpectedExceptions, _clientExceptions.size());
     for(Throwable t : _clientExceptions) {
       assertTrue(t instanceof IOException);
-    }      
+    }
   }
 
   public static int cycleRead(InputStream in, byte[] tmp,
@@ -81,7 +81,7 @@ public class BaseRemoteStreamTest extends TestCase
     switch(iteration % 3) {
     case 0:
       int b = in.read();
-      if(b >= 0) {        
+      if(b >= 0) {
         tmp[0] = (byte)b;
         return 1;
       }
@@ -92,11 +92,11 @@ public class BaseRemoteStreamTest extends TestCase
 
     case 2:
       return in.read(tmp, 0, tmp.length);
-      
+
     }
     throw new RuntimeException("should not get here");
   }
-  
+
   public static void cycleWrite(OutputStream out, byte[] tmp,
                                 int numBytes, int iteration)
     throws IOException
@@ -124,12 +124,12 @@ public class BaseRemoteStreamTest extends TestCase
         out.write(tmp, firstNumBytes, secondNumBytes);
       }
       return;
-      
+
     }
     throw new RuntimeException("should not get here");
   }
 
-  
+
   public static class AccumulateRemoteStreamMonitor<S extends RemoteStreamServer>
     implements RemoteStreamMonitor<S>
   {
@@ -146,12 +146,12 @@ public class BaseRemoteStreamTest extends TestCase
     public AccumulateRemoteStreamMonitor(boolean doAbort) {
       _doAbort = doAbort;
     }
-      
+
     public void failure(S stream, Exception e)
     {
       LOG.debug("Transfer failed for " + stream + ": " + e);
     }
-      
+
     public void bytesMoved(S stream, int numBytes, boolean isReattempt)
     {
       if(!isReattempt) {
@@ -208,6 +208,6 @@ public class BaseRemoteStreamTest extends TestCase
         (_numLocalBytes + _numSkippedLocalBytes);
     }
   }
-  
-  
+
+
 }
