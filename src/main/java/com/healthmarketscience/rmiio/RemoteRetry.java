@@ -28,8 +28,8 @@ King of Prussia, PA 19406
 package com.healthmarketscience.rmiio;
 
 import java.rmi.RemoteException;
-import org.apache.commons.logging.LogFactory;
-import org.apache.commons.logging.Log;
+import org.slf4j.LoggerFactory;
+import org.slf4j.Logger;
 
 
 /**
@@ -86,17 +86,17 @@ import org.apache.commons.logging.Log;
  * Note that the various call() methods use generics to create methods with
  * custom Exception signatures in addition to the custom return types.
  *
- * 
+ *
  * @author James Ahlborn
  */
 public abstract class RemoteRetry
 {
-  protected static final Log LOG = LogFactory.getLog(RemoteRetry.class);
+  protected static final Logger LOG = LoggerFactory.getLogger(RemoteRetry.class);
 
   /** RuntimeException class for overloading of exception types */
   protected static final Class<RuntimeException> RUNTIME_CLASS =
     RuntimeException.class;
-  
+
   /** instance of the {@link Never} retry strategy for general use. */
   public static final RemoteRetry NEVER = new Never();
 
@@ -109,7 +109,7 @@ public abstract class RemoteRetry
 
   protected RemoteRetry() {}
 
-  
+
   /**
    * Implementation of a simple backoff strategy:
    * <ol>
@@ -122,7 +122,7 @@ public abstract class RemoteRetry
    * @param numRetries number of retries which have happended thus far
    * @param log debug log
    */
-  protected static void simpleBackOff(int numRetries, Log log)
+  protected static void simpleBackOff(int numRetries, Logger log)
   {
     if(numRetries == 0) {
       // immediate retry first time
@@ -154,7 +154,7 @@ public abstract class RemoteRetry
    *
    * @param caller implementation of the actual remote method call
    */
-  protected final <RetType> RetType callImpl(Caller<RetType> caller, Log log)
+  protected final <RetType> RetType callImpl(Caller<RetType> caller, Logger log)
     throws Throwable
   {
     int numTries = 0;
@@ -191,11 +191,11 @@ public abstract class RemoteRetry
   {
     return call(caller, LOG, RUNTIME_CLASS, RUNTIME_CLASS, RUNTIME_CLASS);
   }
-  
+
   /**
    * Wrapper for {@link #callImpl} which only throws RuntimeException.
    */
-  public <RetType> RetType call(Caller<RetType> caller, Log log)
+  public <RetType> RetType call(Caller<RetType> caller, Logger log)
   {
     return call(caller, log, RUNTIME_CLASS, RUNTIME_CLASS, RUNTIME_CLASS);
   }
@@ -211,14 +211,14 @@ public abstract class RemoteRetry
   {
     return call(caller, LOG, throwType1, RUNTIME_CLASS, RUNTIME_CLASS);
   }
-  
+
   /**
    * Wrapper for {@link #callImpl} which throws RuntimeException and one user
    * defined Exception.
    */
   public <RetType, ExType1 extends Throwable>
   RetType call(Caller<RetType> caller,
-               Log log,
+               Logger log,
                Class<ExType1> throwType1)
     throws ExType1
   {
@@ -237,14 +237,14 @@ public abstract class RemoteRetry
   {
     return call(caller, LOG, throwType1, throwType2, RUNTIME_CLASS);
   }
-  
+
   /**
    * Wrapper for {@link #callImpl} which throws RuntimeException and two user
    * defined Exceptions.
    */
   public <RetType, ExType1 extends Throwable, ExType2 extends Throwable>
   RetType call(Caller<RetType> caller,
-               Log log,
+               Logger log,
                Class<ExType1> throwType1,
                Class<ExType2> throwType2)
     throws ExType1, ExType2
@@ -266,7 +266,7 @@ public abstract class RemoteRetry
   {
     return call(caller, LOG, throwType1, throwType2, throwType3);
   }
-  
+
   /**
    * Wrapper for {@link #callImpl} which throws RuntimeException and three
    * user defined Exceptions.
@@ -274,7 +274,7 @@ public abstract class RemoteRetry
   public <RetType, ExType1 extends Throwable, ExType2 extends Throwable,
           ExType3 extends Throwable>
   RetType call(Caller<RetType> caller,
-               Log log,
+               Logger log,
                Class<ExType1> throwType1,
                Class<ExType2> throwType2,
                Class<ExType3> throwType3)
@@ -290,8 +290,8 @@ public abstract class RemoteRetry
       throw handleNoMatches(e);
     }
   }
-  
-  
+
+
   /**
    * Checks the given exception against the given Exception type, throwing if
    * the given exception is an instanceof the given type.  Otherwise, returns.
@@ -351,9 +351,9 @@ public abstract class RemoteRetry
    * @param numRetries number of previous reattempts
    * @param log debug log
    */
-  public abstract void backOff(int numRetries, Log log);
+  public abstract void backOff(int numRetries, Logger log);
 
-  
+
   /**
    * Utility type implemented by those atttempting to make remote method calls
    * using this retry mechanism.  The call() method should implement the
@@ -384,7 +384,7 @@ public abstract class RemoteRetry
       voidCall();
       return null;
     }
-    
+
     /**
      * Makes a remote method call which returns no value.  Users should change
      * the exception signature to be that of the actual method call.
@@ -419,7 +419,7 @@ public abstract class RemoteRetry
     public int getMaxNumRetries() {
       return _maxNumRetries;
     }
-    
+
     @Override
     public boolean shouldRetry(Throwable t, int numRetries)
     {
@@ -430,11 +430,11 @@ public abstract class RemoteRetry
     }
 
     @Override
-    public void backOff(int numRetries, Log log)
+    public void backOff(int numRetries, Logger log)
     {
       simpleBackOff(numRetries, log);
     }
-    
+
   }
 
   /**
@@ -456,9 +456,9 @@ public abstract class RemoteRetry
     public final boolean shouldRetry(Throwable t, int numRetries)
     {
       return(t instanceof RemoteException);
-    }    
+    }
   }
-  
+
   /**
    * Simple implementation of Always retry strategy which uses the backoff
    * strategy from {@link RemoteRetry#simpleBackOff}.  Please read warning in
@@ -469,10 +469,10 @@ public abstract class RemoteRetry
     public SimpleAlways() {}
 
     @Override
-    public void backOff(int numRetries, Log log)
+    public void backOff(int numRetries, Logger log)
     {
       simpleBackOff(numRetries, log);
-    }    
+    }
   }
 
   /**
@@ -489,12 +489,12 @@ public abstract class RemoteRetry
     {
       return false;
     }
-    
+
     @Override
-    public void backOff(int numRetries, Log log)
+    public void backOff(int numRetries, Logger log)
     {
       throw new UnsupportedOperationException("Should never be called");
-    }    
+    }
   }
-  
+
 }

@@ -30,7 +30,7 @@ package com.healthmarketscience.rmiio;
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
 
-import org.apache.commons.logging.Log;
+import org.slf4j.Logger;
 import java.lang.reflect.Proxy;
 
 
@@ -64,9 +64,9 @@ public class RemoteWrapper<RemoteType>
   protected RemoteRetry _retry;
   /** the log which will be used by the retry facility when making the remote
       calls */
-  protected final Log _log;
-  
-  public RemoteWrapper(RemoteType stub, RemoteRetry retry, Log log) {
+  protected final Logger _log;
+
+  public RemoteWrapper(RemoteType stub, RemoteRetry retry, Logger log) {
     _stub = stub;
     _retry = retry;
     _log = log;
@@ -77,7 +77,7 @@ public class RemoteWrapper<RemoteType>
    * interface.  This proxy will make all the remote calls through the
    * {@link #invoke} method which makes the actual method calls on the
    * underlying stub within the retry logic.
-   * 
+   *
    * @param iface the remote interface to be implemented
    * @param stub the underlying implementation of the remote interface which
    *             will actually make the remote calls
@@ -87,7 +87,7 @@ public class RemoteWrapper<RemoteType>
    * @return a proxy for the given interface using the given retry strategy
    */
   public static <R> R wrap(Class<R> iface, R stub,
-                           RemoteRetry retry, Log log)
+                           RemoteRetry retry, Logger log)
   {
     RemoteWrapper<R> wrapper = new RemoteWrapper<R>(stub, retry, log);
     return iface.cast(Proxy.newProxyInstance(
@@ -107,10 +107,10 @@ public class RemoteWrapper<RemoteType>
     return _stub;
   }
 
-  public Log getLog() {
+  public Logger getLog() {
     return _log;
   }
-  
+
   public RemoteRetry getRemoteRetry() {
     return _retry;
   }
@@ -142,5 +142,5 @@ public class RemoteWrapper<RemoteType>
         }
       }, _log, Exception.class);
   }
-  
+
 }

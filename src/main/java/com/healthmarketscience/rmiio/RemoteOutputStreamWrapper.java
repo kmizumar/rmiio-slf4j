@@ -29,7 +29,7 @@ package com.healthmarketscience.rmiio;
 
 import java.io.IOException;
 import java.rmi.RemoteException;
-import org.apache.commons.logging.Log;
+import org.slf4j.Logger;
 
 
 /**
@@ -47,7 +47,7 @@ public class RemoteOutputStreamWrapper
 
   public RemoteOutputStreamWrapper(RemoteOutputStream stub,
                                    RemoteRetry retry,
-                                   Log log) {
+                                   Logger log) {
     super(stub, retry, log);
   }
 

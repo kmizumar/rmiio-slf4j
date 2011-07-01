@@ -30,8 +30,8 @@ package com.healthmarketscience.rmiio;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.zip.GZIPInputStream;
-import org.apache.commons.logging.LogFactory;
-import org.apache.commons.logging.Log;
+import org.slf4j.LoggerFactory;
+import org.slf4j.Logger;
 
 import com.healthmarketscience.rmiio.util.EncodingInputStream;
 
@@ -50,8 +50,8 @@ import com.healthmarketscience.rmiio.util.EncodingInputStream;
  */
 public class RemoteInputStreamClient
 {
-  protected static final Log LOG =
-    LogFactory.getLog(RemoteInputStreamClient.class);
+  protected static final Logger LOG =
+    LoggerFactory.getLogger(RemoteInputStreamClient.class);
 
   private RemoteInputStreamClient() {}
 
@@ -67,7 +67,7 @@ public class RemoteInputStreamClient
   {
     return wrap(remoteIn, RemoteClient.DEFAULT_RETRY);
   }
-  
+
   /**
    * Wraps a RemoteInputStream as an InputStream using the given retry
    * strategy.
@@ -94,11 +94,11 @@ public class RemoteInputStreamClient
         new SaferGZIPInputStream(retStream,
                                  RemoteInputStreamServer.DEFAULT_CHUNK_SIZE);
     }
-    
+
     return retStream;
   }
 
-  
+
   /**
    * InputStream implementation which reads data from a RemoteInputStream
    * server.
@@ -177,7 +177,7 @@ public class RemoteInputStreamClient
     {
       return super.packetsAvailable();
     }
-    
+
     @Override
     public void close()
       throws IOException
@@ -234,7 +234,7 @@ public class RemoteInputStreamClient
         }
       }
     }
-    
+
   }
 
   /**
@@ -273,5 +273,5 @@ public class RemoteInputStreamClient
       }
     }
   }
-  
+
 }

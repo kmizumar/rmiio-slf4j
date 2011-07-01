@@ -29,7 +29,7 @@ package com.healthmarketscience.rmiio;
 
 import java.io.IOException;
 import java.rmi.RemoteException;
-import org.apache.commons.logging.Log;
+import org.slf4j.Logger;
 
 
 /**
@@ -47,7 +47,7 @@ public class RemoteInputStreamWrapper
 
   public RemoteInputStreamWrapper(RemoteInputStream stub,
                                   RemoteRetry retry,
-                                  Log log) {
+                                  Logger log) {
     super(stub, retry, log);
   }
 
@@ -128,7 +128,7 @@ public class RemoteInputStreamWrapper
   {
     return skip(n, skipId, _retry);
   }
-  
+
   public long skip(final long n, final int skipId, RemoteRetry retry)
     throws IOException
   {
@@ -140,5 +140,5 @@ public class RemoteInputStreamWrapper
         }
       }, _log, IOException.class);
   }
-  
+
 }
